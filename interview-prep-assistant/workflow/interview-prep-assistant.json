@@ -1,0 +1,311 @@
+{
+  "name": "Interview Prep GPT",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Interview Preparation Tool",
+        "formDescription": "Upload your resume and specify your target role to receive personalized interview preparation materials.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Upload Your Resume",
+              "fieldType": "file",
+              "fieldName": "resume",
+              "multipleFiles": false,
+              "acceptFileTypes": ".pdf,.doc,.docx",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Target Role",
+              "fieldName": "targetRole",
+              "placeholder": "e.g., Software Engineer, Product Manager, Data Analyst",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {
+          "respondWithOptions": {
+            "values": {
+              "formSubmittedText": "Thank you! Your interview preparation materials are being generated. Please check back in a moment."
+            }
+          }
+        }
+      },
+      "id": "342357f3-9fd6-4776-a4bb-8d8d7d74fbfc",
+      "name": "Resume Upload Form",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        240,
+        304
+      ],
+      "webhookId": "bc0077ee-8ecc-4342-bbb6-82953092d6ec"
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "binaryPropertyName": "resume",
+        "options": {
+          "joinPages": true
+        }
+      },
+      "id": "6d1956f2-0d49-4e84-bb59-78ebc5190459",
+      "name": "Extract Resume Text",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        464,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1",
+              "name": "resumeText",
+              "value": "={{ $json.data }}",
+              "type": "string"
+            },
+            {
+              "id": "2",
+              "name": "targetRole",
+              "value": "={{ $(\"Resume Upload Form\").item.json.targetRole }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "3a197d95-a79c-408e-a00c-dec2f277d2f5",
+      "name": "Prepare Analysis Input",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        688,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analyze the following resume for the target role and provide comprehensive interview preparation.\n\nResume:\n{{ $json.resumeText }}\n\nTarget Role: {{ $json.targetRole }}\n\nProvide:\n1. 5-7 tailored interview questions based on the resume and role\n2. A mock interview scenario with 3-4 realistic questions\n3. 3-5 potential weaknesses or gaps in the candidate's profile\n4. 4-6 specific improvement areas with actionable recommendations\n5. Confirm the target audience: Students, Freshers, Career Switchers",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are an expert career coach and interview preparation specialist. Analyze resumes thoroughly and provide actionable, personalized interview preparation guidance. Focus on helping students, freshers, and career switchers succeed in their job search."
+        }
+      },
+      "id": "5ac5ac5f-6ad1-483e-bdee-6db29af7f0fb",
+      "name": "Interview Prep Analyzer",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        912,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {
+          "temperature": 0.7
+        }
+      },
+      "id": "90ee0879-1e41-4963-a615-3ca0dd8ad878",
+      "name": "OpenAI GPT-5",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        928,
+        528
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "Grs1xbVJ5hCKZ7y3",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": {
+          "questions": [
+            "Tell me about your experience leading development teams.",
+            "How do you approach microservices architecture design?"
+          ],
+          "mockInterview": {
+            "scenario": "You are interviewing for a Senior Software Engineer position at a fast-growing tech startup.",
+            "questions": [
+              "Walk me through your most challenging technical project.",
+              "How do you handle disagreements with team members?"
+            ]
+          },
+          "weaknesses": [
+            "Limited experience with cloud infrastructure beyond AWS",
+            "Could strengthen system design skills for large-scale applications"
+          ],
+          "improvementAreas": [
+            "Gain hands-on experience with Kubernetes and container orchestration",
+            "Study distributed systems patterns and scalability challenges",
+            "Practice behavioral interview responses using STAR method"
+          ],
+          "targetAudience": "Students, Freshers, Career Switchers"
+        }
+      },
+      "id": "979ee058-563f-476e-a60b-34a5d3bbf6fe",
+      "name": "Interview Prep Output",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1056,
+        528
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1",
+              "name": "candidateName",
+              "value": "={{ $(\"Resume Upload Form\").item.json.targetRole }}",
+              "type": "string"
+            },
+            {
+              "id": "2",
+              "name": "questions",
+              "value": "={{ $json.output.questions }}",
+              "type": "array"
+            },
+            {
+              "id": "3",
+              "name": "mockInterview",
+              "value": "={{ $json.output.mockInterview }}",
+              "type": "object"
+            },
+            {
+              "id": "4",
+              "name": "weaknesses",
+              "value": "={{ $json.output.weaknesses }}",
+              "type": "array"
+            },
+            {
+              "id": "5",
+              "name": "improvementAreas",
+              "value": "={{ $json.output.improvementAreas }}",
+              "type": "array"
+            },
+            {
+              "id": "6",
+              "name": "targetAudience",
+              "value": "={{ $json.output.targetAudience }}",
+              "type": "string"
+            },
+            {
+              "id": "7",
+              "name": "generatedAt",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "45e73e8f-1de6-43eb-91db-f5f7d46dab50",
+      "name": "Format Results",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1264,
+        304
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Resume Upload Form": {
+      "main": [
+        [
+          {
+            "node": "Extract Resume Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Resume Text": {
+      "main": [
+        [
+          {
+            "node": "Prepare Analysis Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Analysis Input": {
+      "main": [
+        [
+          {
+            "node": "Interview Prep Analyzer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Interview Prep Analyzer": {
+      "main": [
+        [
+          {
+            "node": "Format Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI GPT-5": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Interview Prep Analyzer",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Interview Prep Output": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Interview Prep Analyzer",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "c7a4389c-d065-434c-aa6f-648cd1fb181e",
+  "meta": {
+    "instanceId": "d196f202798c6027baaca43f6de31a18566bc70209176ec8a8a052c4fd6866e8"
+  },
+  "nodeGroups": [],
+  "id": "zQHJWm3WJegQcqYU",
+  "tags": []
+}
