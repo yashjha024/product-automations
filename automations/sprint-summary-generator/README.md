@@ -1,19 +1,21 @@
 # 🏃‍♂️ Sprint Summary Generator
 
-An automated workflow designed to eliminate manual sprint reporting by aggregating completed and pending tasks, generating insightful AI summaries, and distributing executive updates to your team's communication channels.
+An automated n8n workflow designed to streamline sprint reporting by processing sprint progress data through an AI agent (powered by OpenAI GPT-5 Mini), structuring the output, and distributing executive updates across Slack and Email (Gmail).
 
 ---
 
 ## 📊 Workflow Architecture
 
-![Workflow Overview](./assets/workflow-overview.png)
+![Workflow Overview](./assets/image.png)
 
 ### 🔗 Key Stages
 
-1. **Scheduled Trigger**: Initiates automatically at the end of a sprint (e.g., Friday at 5:00 PM or Monday at 9:00 AM).
-2. **Data Ingestion**: Fetches sprint metrics, completed issues, blockers, and carry-over tasks from project management tools (Jira / Linear / GitHub Projects).
-3. **AI Summarization**: Uses an LLM (Gemini 3.1 Pro / OpenAI) to synthesize raw task data into concise executive insights, team achievements, and risk assessments.
-4. **Multi-Channel Distribution**: Broadcasts the formatted summary to Slack/Microsoft Teams and logs an archival copy in Notion/Confluence.
+1. **Manual / Trigger Ingestion**: Initiates the workflow with structured sprint input data, including `completed_tickets`, `blocked_tickets`, `key_updates`, `bugs`, and `next_steps`.
+2. **AI Summarization Agent**: Uses a LangChain Agent node powered by **OpenAI GPT-5 Mini** to synthesize raw sprint data into 3–5 concise bullet-style executive statements, highlighting notable wins, blockers, and risks.
+3. **Structured Output Parsing**: Enforces a strict JSON schema via the **Sprint Summary Parser** to reliably extract structured fields: `sprint_summary`, `wins`, `blockers`, `risks`, and `next_steps`.
+4. **Multi-Channel Distribution**:
+   - **Slack**: Formats and broadcasts a clean Markdown report to your designated team channel.
+   - **Gmail / Email**: Formats and dispatches an HTML email summary to stakeholders and leadership.
 
 ---
 
@@ -23,9 +25,9 @@ An automated workflow designed to eliminate manual sprint reporting by aggregati
 sprint-summary-generator/
 ├── README.md                                  # Documentation & Setup Guide
 ├── workflow/
-│   └── sprint-summary-generator.json          # Workflow JSON Definition
+│   └── sprint-summary-generator.json          # n8n Workflow JSON Definition
 └── assets/
-    └── workflow-overview.png                  # Visual architecture diagram
+    └── image.png                              # Visual architecture diagram
 ```
 
 ---
@@ -33,29 +35,46 @@ sprint-summary-generator/
 ## ⚙️ Setup & Installation
 
 ### 1. Prerequisites
-- **Automation Platform**: n8n, Make, or custom JSON workflow engine.
+- **Automation Platform**: n8n (v1.x+ with LangChain nodes enabled).
 - **API Credentials**:
-  - Project Management Tool API Key (Jira / Linear / GitHub)
-  - LLM API Key (Google Gemini / OpenAI)
-  - Messaging Webhook URL (Slack / Teams / Discord)
+  - **OpenAI API**: Credential for OpenAI GPT-5 Mini (`openAiApi`).
+  - **Slack**: Webhook or Slack OAuth credential for channel posting.
+  - **Gmail**: OAuth2 credential for sending email reports (`gmailOAuth2`).
 
 ### 2. Import Workflow
-1. Navigate to your automation platform.
+1. Navigate to your n8n workspace.
 2. Select **Import from File** or **Import from JSON**.
 3. Upload `workflow/sprint-summary-generator.json`.
 
-### 3. Configure Credentials & Variables
-Update the environment variables or credential nodes within the imported workflow:
-- `PROJECT_ID`: Your target Sprint/Project ID.
-- `AI_MODEL`: Set to your preferred LLM (default: `gemini-3.1-pro`).
-- `WEBHOOK_URL`: Your Slack/Teams destination channel webhook.
+### 3. Configure Credentials & Input Data
+Update the credential connections and input parameters within the imported workflow:
+- **OpenAI GPT-5 Mini**: Connect your OpenAI API credentials.
+- **Send to Slack**: Select your target Slack channel or configure the webhook ID.
+- **Send to Email**: Update the `sendTo` parameter in the Gmail node with recipient email addresses.
+- **Manual Trigger / Input**: Pass in JSON payload containing `completed_tickets`, `blocked_tickets`, `key_updates`, `bugs`, and `next_steps`.
 
 ---
 
-## 📝 Example AI Summary Output
+## 📝 Example Output Schema
 
-> **🚀 Sprint 24 Executive Summary**
-> - **✅ Completed Tasks**: 18 tickets closed across Frontend, Backend, and DevOps.
-> - **🌟 Key Highlights**: Successfully launched the new user authentication flow and reduced API P99 latency by 35%.
-> - **⚠️ Blockers & Risks**: Payment gateway sandbox integration delayed due to third-party API downtime; moved to Sprint 25.
-> - **🎯 Next Sprint Focus**: Checkout page redesign and end-to-end load testing.
+The AI Agent outputs structured JSON parsed into clean reports for Slack and Gmail:
+
+```json
+{
+  "sprint_summary": "Sprint progress remained on schedule with major deliverables completed across core services.",
+  "wins": [
+    "Successfully migrated authentication service to OAuth2",
+    "Reduced API response latency by 25%"
+  ],
+  "blockers": [
+    "Waiting on third-party vendor API access for billing module"
+  ],
+  "risks": [
+    "Potential delay in Q3 release if sandbox testing is impeded"
+  ],
+  "next_steps": [
+    "Begin end-to-end integration testing for checkout flow",
+    "Finalize security audit remediation"
+  ]
+}
+```
