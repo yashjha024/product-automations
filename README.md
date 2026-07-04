@@ -27,13 +27,13 @@ The workflow files are included so the work can be inspected, not just described
 
 ### Sprint Summary Generator
 
-Turns raw sprint updates into a concise summary of progress, wins, blockers, risks, and next steps for cross-functional teams.
+Turns scattered sprint updates into a concise view of progress, wins, blockers, risks, and next steps.
 
-**Problem:** Sprint information is often scattered across tickets and updates, while stakeholders need a short, useful view of what changed and what needs attention.
+**Problem:** Sprint information often lives across tickets and updates, while stakeholders need a clear view of what changed and what needs attention.
 
 **Workflow:** Sprint inputs → structured analysis → stakeholder-ready summary → Slack or email
 
-[Explore the automation →](./sprint-summary-generator/README.md)
+[Explore the automation →](./sprint-summary-generator)
 
 ---
 
