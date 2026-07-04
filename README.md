@@ -33,7 +33,7 @@ Turns raw sprint updates into a concise summary of progress, wins, blockers, ris
 
 **Workflow:** Sprint inputs → structured analysis → stakeholder-ready summary → Slack or email
 
-[Explore the automation →](./sprint-summary-generator/CASE-STUDY.md)
+[Explore the automation →](./sprint-summary-generator/README.md)
 
 ---
 
