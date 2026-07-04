@@ -2,7 +2,7 @@
 
 An AI-assisted workflow that turns raw product context into a structured PRD draft while keeping missing information visible instead of filling gaps with assumptions.
 
-![PRD Copilot Workflow](./assets/workflow-overview.png)
+![PRD Copilot Workflow](./assets/image.png)
 
 ## The Problem
 
