@@ -1,0 +1,484 @@
+{
+  "name": "AI Email Assistant",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {
+          "q": "in:inbox",
+          "readStatus": "unread"
+        },
+        "options": {}
+      },
+      "id": "e46512d9-bc12-42df-a3ab-7bb885825e45",
+      "name": "Monitor Gmail",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        240,
+        304
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "SQlbw6AB7q3au0df",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analyze this email and extract structured information:\n\nFrom: {{ $json.from }}\nSubject: {{ $json.subject }}\nDate: {{ $json.date }}\nBody: {{ $json.text }}\n\nCategorize the email (job_opportunity, interview, work, personal, newsletter, spam, other).\nDetect if it contains an interview invitation or job opportunity.\nExtract all action items.\nGenerate a professional draft reply.\nIf it's an interview or meeting, extract calendar event details (title, start, end, description).\nAssign priority (high, medium, low).",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are an expert email assistant. Analyze emails and extract structured information including categories, action items, and calendar events. Always respond in the exact JSON format specified."
+        }
+      },
+      "id": "3fa16620-480f-431c-b312-ba3b87e89f41",
+      "name": "Analyze Email",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        464,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {
+          "temperature": 0.2
+        }
+      },
+      "id": "d6f454a8-5b4a-4ba1-a62d-783ee75478ce",
+      "name": "OpenAI Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        480,
+        528
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "Grs1xbVJ5hCKZ7y3",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": {
+          "category": "job_opportunity",
+          "isInterview": true,
+          "isJobOpportunity": true,
+          "actionItems": [
+            "Schedule interview for Jan 20 at 2 PM",
+            "Prepare portfolio"
+          ],
+          "suggestedReply": "Thank you for the interview invitation...",
+          "calendarEvent": {
+            "title": "Interview - Software Engineer",
+            "start": "2024-01-20T14:00:00",
+            "end": "2024-01-20T15:00:00",
+            "description": "Interview with Company XYZ"
+          },
+          "priority": "high"
+        }
+      },
+      "id": "75b0649a-a77e-4a94-9568-950f3821bc1f",
+      "name": "Email Analysis Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        608,
+        528
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "markAsRead",
+        "messageId": "={{ $('Monitor Gmail').item.json.id }}"
+      },
+      "id": "0e2230b7-c3c3-4350-9cd4-1ee4f88d7ea9",
+      "name": "Mark Email as Read",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        816,
+        304
+      ],
+      "webhookId": "2f379cbd-2445-4aa0-8460-d429c95aeeed",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "SQlbw6AB7q3au0df",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "draft",
+        "subject": "=Re: {{ $(\"Monitor Gmail\").item.json.subject }}",
+        "message": "={{ $('Analyze Email').item.json.output.suggestedReply }}",
+        "options": {
+          "threadId": "={{ $('Monitor Gmail').item.json.threadId }}",
+          "sendTo": "={{ $('Monitor Gmail').item.json.from }}"
+        }
+      },
+      "id": "2ae7491c-db30-4e69-9ddf-9a3a1055bf68",
+      "name": "Create Draft Reply",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1040,
+        208
+      ],
+      "webhookId": "d70cb422-ef98-44ef-849c-0be5da701f3c",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "SQlbw6AB7q3au0df",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "combinator": "and",
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $('Analyze Email').item.json.output.calendarEvent }}",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty"
+              },
+              "rightValue": ""
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "06b56ad8-e9fa-446c-96d2-7028a01ebf8c",
+      "name": "Filter Calendar Events",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        1040,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "mode": "list",
+          "value": "primary"
+        },
+        "start": "={{ $json.output.calendarEvent.start }}",
+        "end": "={{ $json.output.calendarEvent.end }}",
+        "additionalFields": {
+          "description": "={{ $json.output.calendarEvent.description }}",
+          "summary": "={{ $json.output.calendarEvent.title }}"
+        }
+      },
+      "id": "8d7c40da-acaf-4706-8ca8-06f0b8545f18",
+      "name": "Add to Calendar",
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        1264,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 18
+            }
+          ]
+        }
+      },
+      "id": "40cf7327-65f0-466c-9843-7775271b17da",
+      "name": "Daily Summary Schedule",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        240,
+        736
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "simple": false,
+        "filters": {
+          "q": "newer_than:1d"
+        },
+        "options": {}
+      },
+      "id": "41459ff0-2114-437f-8a89-06cafd72b8f6",
+      "name": "Fetch Today's Emails",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        464,
+        736
+      ],
+      "webhookId": "d7d45117-f908-4de5-83aa-69bd63b88272",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "SQlbw6AB7q3au0df",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "emails",
+        "include": "specifiedFields",
+        "fieldsToInclude": "subject,from,date",
+        "options": {}
+      },
+      "id": "be31517c-6daa-4a26-81d6-7325068f4819",
+      "name": "Aggregate Email Data",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        688,
+        736
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Generate a concise daily email summary report for the following emails:\n\n{{ $json.emails }}\n\nInclude:\n- Total emails received today\n- Key highlights (interviews, job opportunities, urgent items)\n- Action items that need attention\n- Categories breakdown\n\nFormat as a professional email body.",
+        "options": {
+          "systemMessage": "You are an executive assistant creating daily email summaries. Be concise, highlight important items, and organize information clearly."
+        }
+      },
+      "id": "266e8372-00f1-40d5-81f5-28d1d79e2f4b",
+      "name": "Generate Daily Summary",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        912,
+        736
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {
+          "temperature": 0.3
+        }
+      },
+      "id": "9e633e83-8c1f-4f9e-b2e2-40ab28644ac1",
+      "name": "Summary Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        992,
+        960
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "Grs1xbVJ5hCKZ7y3",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "<__PLACEHOLDER_VALUE__your-email@gmail.com__>",
+        "subject": "=Daily Email Summary - {{ $now.toFormat(\"MMMM d, yyyy\") }}",
+        "emailType": "text",
+        "message": "={{ $json.output }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "a7673e97-9b05-4d31-9b3a-180f196c3af7",
+      "name": "Send Daily Summary",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1264,
+        736
+      ],
+      "webhookId": "683843bb-2980-4257-9f85-9e7dd9e37e9b",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "SQlbw6AB7q3au0df",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Monitor Gmail": {
+      "main": [
+        [
+          {
+            "node": "Analyze Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze Email": {
+      "main": [
+        [
+          {
+            "node": "Mark Email as Read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Analyze Email",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email Analysis Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Analyze Email",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark Email as Read": {
+      "main": [
+        [
+          {
+            "node": "Create Draft Reply",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Filter Calendar Events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Calendar Events": {
+      "main": [
+        [
+          {
+            "node": "Add to Calendar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Daily Summary Schedule": {
+      "main": [
+        [
+          {
+            "node": "Fetch Today's Emails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Today's Emails": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Email Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate Email Data": {
+      "main": [
+        [
+          {
+            "node": "Generate Daily Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Daily Summary": {
+      "main": [
+        [
+          {
+            "node": "Send Daily Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Summary Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Generate Daily Summary",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "fe493e54-62bb-498d-87b8-8236722527f7",
+  "meta": {
+    "instanceId": "d196f202798c6027baaca43f6de31a18566bc70209176ec8a8a052c4fd6866e8"
+  },
+  "nodeGroups": [],
+  "id": "uw7xrzLWeRkPbEJt",
+  "tags": []
+}
