@@ -1,0 +1,252 @@
+{
+  "name": "Day Planner",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 6
+            }
+          ]
+        }
+      },
+      "id": "3c91ad0e-a2a8-4c8e-8f38-6e46a4f7e9e3",
+      "name": "Daily at 6 AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        240,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "mode": "list",
+          "value": "primary"
+        },
+        "returnAll": true,
+        "timeMin": "={{ $now.startOf(\"day\").toISO() }}",
+        "timeMax": "={{ $now.endOf(\"day\").toISO() }}",
+        "options": {
+          "orderBy": "startTime"
+        }
+      },
+      "id": "363ba6bd-79dc-46a6-b98f-154262484beb",
+      "name": "Fetch Today's Events",
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        464,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1",
+              "name": "current_datetime",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            },
+            {
+              "id": "2",
+              "name": "today_events",
+              "value": "={{ $(\"Fetch Today's Events\").all() }}",
+              "type": "array"
+            },
+            {
+              "id": "3",
+              "name": "task_backlog",
+              "value": "<__PLACEHOLDER_VALUE__Your task backlog (array of tasks)__>",
+              "type": "array"
+            },
+            {
+              "id": "4",
+              "name": "priority_context",
+              "value": "<__PLACEHOLDER_VALUE__Priority context (e.g., \"Focus on placement prep and career work\")__>",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "2e8503e3-b9e0-4176-8c0a-3eea508ad042",
+      "name": "Prepare Planning Input",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        688,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=# ROLE\nYou are a daily planning assistant.\n\n# TASK\nCreate a practical day plan from calendar events, backlog tasks, and priorities.\n\n# INPUT\ncurrent_datetime: {{ $json.current_datetime }}\ntoday_events: {{ $json.today_events }}\ntask_backlog: {{ $json.task_backlog }}\npriority_context: {{ $json.priority_context }}\n\n# INSTRUCTIONS\n1. Review today's calendar and tasks.\n2. Identify fixed commitments first.\n3. Suggest focused blocks for high-priority work.\n4. Protect time for placement, career, and learning work.\n5. Call out overload, conflicts, or unrealistic plans.\n6. Keep the plan concise and executable.\n7. Return valid JSON only matching the schema.",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are a daily planning assistant. Analyze calendar events, task backlog, and priority context to generate a structured, executable day plan. Focus on protecting time for high-priority work like placement prep, career development, and learning. Flag overload and conflicts.",
+          "maxIterations": 5
+        }
+      },
+      "id": "b249127e-7f80-4394-9ddd-88378a0061bf",
+      "name": "Daily Planning Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        912,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {
+          "temperature": 0.3
+        }
+      },
+      "id": "88c9e8e9-5c6e-4cb3-b2ed-367c1742d723",
+      "name": "OpenAI GPT-5",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        928,
+        528
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "kVg8g0OWbavnfGin",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": {
+          "date": "2024-01-15",
+          "schedule_summary": "Balanced day with 3 meetings and 4 focus blocks",
+          "top_3_priorities": [
+            "Complete resume tailoring",
+            "Study DSA - Trees",
+            "Review system design"
+          ],
+          "fixed_commitments": [
+            {
+              "time": "09:00-09:30",
+              "title": "Team standup",
+              "type": "meeting"
+            }
+          ],
+          "focus_blocks": [
+            {
+              "time": "10:00-12:00",
+              "title": "Deep work - Resume",
+              "priority": "high"
+            }
+          ],
+          "followups": [
+            "Send updated resume to recruiter",
+            "Schedule mock interview"
+          ],
+          "risks": [
+            "Back-to-back meetings may cause fatigue"
+          ],
+          "recommended_changes": [
+            "Move 3pm meeting to tomorrow for uninterrupted focus time"
+          ]
+        }
+      },
+      "id": "3d74bbcb-d5d9-4a5e-86f0-8671a44bb51e",
+      "name": "Day Plan Schema",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1056,
+        528
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Daily at 6 AM": {
+      "main": [
+        [
+          {
+            "node": "Fetch Today's Events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Today's Events": {
+      "main": [
+        [
+          {
+            "node": "Prepare Planning Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Planning Input": {
+      "main": [
+        [
+          {
+            "node": "Daily Planning Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI GPT-5": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Daily Planning Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Day Plan Schema": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Daily Planning Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "a9722810-0494-4084-8010-1cac6fc4db66",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d196f202798c6027baaca43f6de31a18566bc70209176ec8a8a052c4fd6866e8"
+  },
+  "nodeGroups": [],
+  "id": "yf1kFriyOYO51lJ9",
+  "tags": []
+}
