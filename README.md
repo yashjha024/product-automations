@@ -35,18 +35,6 @@ Turns scattered sprint updates into a concise view of progress, wins, blockers, 
 
 [Explore the automation →](./sprint-summary-generator)
 
-## Automations
-
-### Sprint Summary Generator
-
-Turns scattered sprint updates into a concise view of progress, wins, blockers, risks, and next steps.
-
-**Problem:** Sprint information often lives across tickets and updates, while stakeholders need a clear view of what changed and what needs attention.
-
-**Workflow:** Sprint inputs → structured analysis → stakeholder-ready summary → Slack or email
-
-[Explore the automation →](./sprint-summary-generator)
-
 ---
 
 ### PRD Copilot
