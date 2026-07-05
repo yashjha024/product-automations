@@ -119,9 +119,37 @@ That means asking:
 product-automations/
 ├── README.md
 │
-└── sprint-summary-generator/
-    ├── CASE-STUDY.md
+├── sprint-summary-generator/
+│   ├── README.md
+│   ├── assets/
+│   │   └── image.png
+│   └── workflow/
+│       └── sprint-summary-generator.json
+│
+├── prd-copilot/
+│   ├── README.md
+│   ├── assets/
+│   │   └── image.png
+│   └── workflow/
+│       └── prd-copilot.json
+│
+├── interview-prep-assistant/
+│   ├── README.md
+│   ├── assets/
+│   │   └── image.png
+│   └── workflow/
+│       └── interview-prep-assistant.json
+│
+├── day-planner/
+│   ├── README.md
+│   ├── assets/
+│   │   └── image.png
+│   └── workflow/
+│       └── day-planner.json
+│
+└── ai-email-assistant/
+    ├── README.md
     ├── assets/
-    │   └── workflow-overview.png
+    │   └── image.png
     └── workflow/
-        └── sprint-summary-generator.json
+        └── ai-email-assistant.json
