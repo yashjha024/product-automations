@@ -35,6 +35,66 @@ Turns scattered sprint updates into a concise view of progress, wins, blockers, 
 
 [Explore the automation →](./sprint-summary-generator)
 
+## Automations
+
+### Sprint Summary Generator
+
+Turns scattered sprint updates into a concise view of progress, wins, blockers, risks, and next steps.
+
+**Problem:** Sprint information often lives across tickets and updates, while stakeholders need a clear view of what changed and what needs attention.
+
+**Workflow:** Sprint inputs → structured analysis → stakeholder-ready summary → Slack or email
+
+[Explore the automation →](./sprint-summary-generator)
+
+---
+
+### PRD Copilot
+
+Turns raw product context into a structured PRD draft while keeping missing information visible instead of filling gaps with assumptions.
+
+**Problem:** Product ideas are often scattered across meeting notes, user problems, business goals, and constraints, making it difficult to turn incomplete context into a clear first draft.
+
+**Workflow:** Product context → AI synthesis → structured output validation → PRD draft
+
+[Explore the automation →](./prd-copilot)
+
+---
+
+### Interview Prep Assistant
+
+Uses a candidate's resume and target role to create personalized interview preparation around their actual experience.
+
+**Problem:** Generic interview questions ignore the combination of what a candidate has claimed on their resume and the role they are actually preparing for.
+
+**Workflow:** Resume + target role → text extraction → contextual analysis → structured preparation plan
+
+[Explore the automation →](./interview-prep-assistant)
+
+---
+
+### Day Planner
+
+Combines calendar commitments, backlog tasks, and current priorities to create a realistic plan around the time actually available.
+
+**Problem:** Calendars show commitments and task lists show work, but neither answers what can realistically be completed when both compete for the same day.
+
+**Workflow:** Calendar events + tasks + priorities → workload analysis → structured daily plan
+
+[Explore the automation →](./day-planner)
+
+---
+
+### AI Email Assistant
+
+Turns incoming emails into structured actions by identifying what needs attention, preparing replies, detecting calendar events, and summarizing inbox activity.
+
+**Problem:** The real work of email begins after reading it—deciding what matters, what needs a response, what belongs on the calendar, and what should not be forgotten.
+
+**Workflow:** Incoming email → analysis → structured actions → draft reply / calendar event → daily summary
+
+[Explore the automation →](./ai-email-assistant)
+
 ---
 
 More automations will be added as I build, test, and document them.
