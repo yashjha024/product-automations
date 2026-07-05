@@ -1,5 +1,5 @@
 {
-  "name": "Interview Prep GPT",
+  "name": "Interview Prep Assistant",
   "nodes": [
     {
       "parameters": {
@@ -38,8 +38,7 @@
       "position": [
         240,
         304
-      ],
-      "webhookId": "bc0077ee-8ecc-4342-bbb6-82953092d6ec"
+      ]
     },
     {
       "parameters": {
@@ -124,13 +123,7 @@
       "position": [
         928,
         528
-      ],
-      "credentials": {
-        "openAiApi": {
-          "id": "Grs1xbVJ5hCKZ7y3",
-          "name": "OpenAI account"
-        }
-      }
+      ]
     },
     {
       "parameters": {
@@ -301,11 +294,6 @@
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "versionId": "c7a4389c-d065-434c-aa6f-648cd1fb181e",
-  "meta": {
-    "instanceId": "d196f202798c6027baaca43f6de31a18566bc70209176ec8a8a052c4fd6866e8"
-  },
   "nodeGroups": [],
-  "id": "zQHJWm3WJegQcqYU",
   "tags": []
 }

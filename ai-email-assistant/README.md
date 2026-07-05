@@ -2,7 +2,7 @@
 
 An event-driven email workflow that monitors incoming messages, extracts what needs attention, prepares draft replies, identifies calendar events, and turns inbox activity into structured actions.
 
-![AI Email Assistant Workflow](./assets/workflow-overview.png)
+![AI Email Assistant Workflow](./assets/image.png)
 
 ## The Problem
 

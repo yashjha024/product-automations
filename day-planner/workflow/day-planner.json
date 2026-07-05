@@ -123,13 +123,7 @@
       "position": [
         928,
         528
-      ],
-      "credentials": {
-        "openAiApi": {
-          "id": "kVg8g0OWbavnfGin",
-          "name": "n8n free OpenAI API credits"
-        }
-      }
+      ]
     },
     {
       "parameters": {
@@ -241,12 +235,6 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "a9722810-0494-4084-8010-1cac6fc4db66",
-  "meta": {
-    "templateCredsSetupCompleted": true,
-    "instanceId": "d196f202798c6027baaca43f6de31a18566bc70209176ec8a8a052c4fd6866e8"
-  },
   "nodeGroups": [],
-  "id": "yf1kFriyOYO51lJ9",
   "tags": []
 }

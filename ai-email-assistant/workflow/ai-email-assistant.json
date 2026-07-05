@@ -24,13 +24,7 @@
       "position": [
         240,
         304
-      ],
-      "credentials": {
-        "gmailOAuth2": {
-          "id": "SQlbw6AB7q3au0df",
-          "name": "Gmail OAuth2 API"
-        }
-      }
+      ]
     },
     {
       "parameters": {
@@ -69,13 +63,7 @@
       "position": [
         480,
         528
-      ],
-      "credentials": {
-        "openAiApi": {
-          "id": "Grs1xbVJ5hCKZ7y3",
-          "name": "OpenAI account"
-        }
-      }
+      ]
     },
     {
       "parameters": {
@@ -118,14 +106,7 @@
       "position": [
         816,
         304
-      ],
-      "webhookId": "2f379cbd-2445-4aa0-8460-d429c95aeeed",
-      "credentials": {
-        "gmailOAuth2": {
-          "id": "SQlbw6AB7q3au0df",
-          "name": "Gmail OAuth2 API"
-        }
-      }
+      ]
     },
     {
       "parameters": {
@@ -144,14 +125,7 @@
       "position": [
         1040,
         208
-      ],
-      "webhookId": "d70cb422-ef98-44ef-849c-0be5da701f3c",
-      "credentials": {
-        "gmailOAuth2": {
-          "id": "SQlbw6AB7q3au0df",
-          "name": "Gmail OAuth2 API"
-        }
-      }
+      ]
     },
     {
       "parameters": {
@@ -243,14 +217,7 @@
       "position": [
         464,
         736
-      ],
-      "webhookId": "d7d45117-f908-4de5-83aa-69bd63b88272",
-      "credentials": {
-        "gmailOAuth2": {
-          "id": "SQlbw6AB7q3au0df",
-          "name": "Gmail OAuth2 API"
-        }
-      }
+      ]
     },
     {
       "parameters": {
@@ -305,13 +272,7 @@
       "position": [
         992,
         960
-      ],
-      "credentials": {
-        "openAiApi": {
-          "id": "Grs1xbVJ5hCKZ7y3",
-          "name": "OpenAI account"
-        }
-      }
+      ]
     },
     {
       "parameters": {
@@ -330,14 +291,7 @@
       "position": [
         1264,
         736
-      ],
-      "webhookId": "683843bb-2980-4257-9f85-9e7dd9e37e9b",
-      "credentials": {
-        "gmailOAuth2": {
-          "id": "SQlbw6AB7q3au0df",
-          "name": "Gmail OAuth2 API"
-        }
-      }
+      ]
     }
   ],
   "pinData": {},
@@ -474,11 +428,6 @@
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "versionId": "fe493e54-62bb-498d-87b8-8236722527f7",
-  "meta": {
-    "instanceId": "d196f202798c6027baaca43f6de31a18566bc70209176ec8a8a052c4fd6866e8"
-  },
   "nodeGroups": [],
-  "id": "uw7xrzLWeRkPbEJt",
   "tags": []
 }
