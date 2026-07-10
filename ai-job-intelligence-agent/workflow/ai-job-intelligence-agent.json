@@ -1,0 +1,863 @@
+{
+  "name": "AI Job Intelligence Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "days",
+              "triggerAtHour": 8,
+              "triggerAtMinute": 0
+            }
+          ]
+        }
+      },
+      "id": "e5c4a8f9-1234-4a5b-9c6d-7e8f9a0b1c2d",
+      "name": "Daily Morning Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "url": "<__PLACEHOLDER_VALUE__LinkedIn Jobs API URL (e.g., https://api.linkedin.com/v2/jobs)__>",
+        "options": {}
+      },
+      "id": "f1a2b3c4-d5e6-4f7a-8b9c-0d1e2f3a4b5c",
+      "name": "Search LinkedIn Jobs",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        460,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "url": "<__PLACEHOLDER_VALUE__Naukri Jobs API URL (e.g., https://api.naukri.com/jobs)__>",
+        "options": {}
+      },
+      "id": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+      "name": "Search Naukri Jobs",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        460,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "url": "<__PLACEHOLDER_VALUE__Wellfound Jobs API URL (e.g., https://api.wellfound.com/jobs)__>",
+        "options": {}
+      },
+      "id": "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e",
+      "name": "Search Wellfound Jobs",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        460,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "url": "<__PLACEHOLDER_VALUE__Company Careers API URL or scraping endpoint__>",
+        "options": {}
+      },
+      "id": "c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f",
+      "name": "Search Company Career Pages",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        460,
+        720
+      ]
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "allJobs",
+        "options": {}
+      },
+      "id": "d4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a",
+      "name": "Combine All Jobs",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        700,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "allJobs",
+        "options": {}
+      },
+      "id": "e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b",
+      "name": "Split Jobs to Items",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        920,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a1",
+              "leftValue": "={{ $json.experienceRange }}",
+              "rightValue": "0-2 years",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "a2",
+              "leftValue": "={{ $json.minExperience }}",
+              "rightValue": 2,
+              "operator": {
+                "type": "number",
+                "operation": "lte"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "id": "f6a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c",
+      "name": "Filter 0-2 Years Experience",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        1140,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1",
+              "name": "title",
+              "value": "={{ $json.title }}",
+              "type": "string"
+            },
+            {
+              "id": "2",
+              "name": "company",
+              "value": "={{ $json.company }}",
+              "type": "string"
+            },
+            {
+              "id": "3",
+              "name": "location",
+              "value": "={{ $json.location }}",
+              "type": "string"
+            },
+            {
+              "id": "4",
+              "name": "url",
+              "value": "={{ $json.url }}",
+              "type": "string"
+            },
+            {
+              "id": "5",
+              "name": "description",
+              "value": "={{ $json.description }}",
+              "type": "string"
+            },
+            {
+              "id": "6",
+              "name": "source",
+              "value": "={{ $json.source }}",
+              "type": "string"
+            },
+            {
+              "id": "7",
+              "name": "jobIdHash",
+              "value": "={{ $json.company + '-' + $json.title + '-' + $json.location }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d",
+      "name": "Normalize Job Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1360,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "compare": "selectedFields",
+        "fieldsToCompare": "jobIdHash",
+        "options": {}
+      },
+      "id": "2b3c4d5e-6f7a-4b8c-9d0e-1f2a3b4c5d6e",
+      "name": "Remove Duplicate Jobs",
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 1.1,
+      "position": [
+        1580,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "lookup",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "lookupColumn": "jobIdHash",
+        "lookupValue": "={{ $json.jobIdHash }}"
+      },
+      "id": "3c4d5e6f-7a8b-4c9d-0e1f-2a3b4c5d6e7f",
+      "name": "Check Previously Seen Jobs",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        1800,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1",
+              "name": "isNewJob",
+              "value": "={{ $json.found ? false : true }}",
+              "type": "boolean"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "4d5e6f7a-8b9c-4d0e-1f2a-3b4c5d6e7f8a",
+      "name": "Mark New Jobs",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2020,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.isNewJob }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "5e6f7a8b-9c0d-4e1f-2a3b-4c5d6e7f8a9b",
+      "name": "Keep Only New Jobs",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        2240,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ \"Analyze this job posting and score it (0-100) based on how well it matches my profile.\\n\\nMy Profile:\\n- Skills: Python, JavaScript, React, SQL, Machine Learning\\n- Preferred Location: Remote or Bangalore\\n- Experience Level: 0-2 years\\n- Interests: AI/ML, Product Development, Data Analysis\\n\\nJob Details:\\nTitle: \" + $json.title + \"\\nCompany: \" + $json.company + \"\\nLocation: \" + $json.location + \"\\nDescription: \" + $json.description }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are an expert tech career advisor and job matching AI. Carefully evaluate job requirements against the candidate's skills and experience. Be realistic and objective with scoring."
+        }
+      },
+      "id": "6f7a8b9c-0d1e-4f2a-3b4c-5d6e7f8a9b0c",
+      "name": "Score Job Against Profile",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        2460,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5"
+        },
+        "options": {}
+      },
+      "id": "7a8b9c0d-1e2f-4a3b-4c5d-6e7f8a9b0c1d",
+      "name": "OpenAI GPT-5 Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.1,
+      "position": [
+        2460,
+        660
+      ]
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"score\": 85,\n  \"matchReason\": \"Strong alignment with Python and React skills. Entry-level 0-2 years requirement matches exactly.\",\n  \"skillsMatch\": [\"Python\", \"React\", \"SQL\"],\n  \"missingSkills\": [\"Docker\", \"AWS\"]\n}"
+      },
+      "id": "8b9c0d1e-2f3a-4b4c-5d6e-7f8a9b0c1d2e",
+      "name": "Job Score Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        2600,
+        660
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1",
+              "name": "score",
+              "value": "={{ $json.output.score }}",
+              "type": "number"
+            },
+            {
+              "id": "2",
+              "name": "matchReason",
+              "value": "={{ $json.output.matchReason }}",
+              "type": "string"
+            },
+            {
+              "id": "3",
+              "name": "skillsMatch",
+              "value": "={{ $json.output.skillsMatch }}",
+              "type": "array"
+            },
+            {
+              "id": "4",
+              "name": "missingSkills",
+              "value": "={{ $json.output.missingSkills }}",
+              "type": "array"
+            },
+            {
+              "id": "5",
+              "name": "title",
+              "value": "={{ $('Keep Only New Jobs').item.json.title }}",
+              "type": "string"
+            },
+            {
+              "id": "6",
+              "name": "company",
+              "value": "={{ $('Keep Only New Jobs').item.json.company }}",
+              "type": "string"
+            },
+            {
+              "id": "7",
+              "name": "location",
+              "value": "={{ $('Keep Only New Jobs').item.json.location }}",
+              "type": "string"
+            },
+            {
+              "id": "8",
+              "name": "url",
+              "value": "={{ $('Keep Only New Jobs').item.json.url }}",
+              "type": "string"
+            },
+            {
+              "id": "9",
+              "name": "jobIdHash",
+              "value": "={{ $('Keep Only New Jobs').item.json.jobIdHash }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "9c0d1e2f-3a4b-4c5d-6e7f-8a9b0c1d2e3f",
+      "name": "Combine Job with Score",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2780,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Job Title": "={{ $json.title }}",
+            "Company": "={{ $json.company }}",
+            "Location": "={{ $json.location }}",
+            "Match Score": "={{ $json.score }}",
+            "Match Reason": "={{ $json.matchReason }}",
+            "Job URL": "={{ $json.url }}",
+            "Date Found": "={{ $now.toFormat('yyyy-MM-dd') }}"
+          },
+          "matchingColumns": [
+            "Job URL"
+          ]
+        },
+        "options": {}
+      },
+      "id": "0d1e2f3a-4b5c-4d6e-7f8a-9b0c1d2e3f4a",
+      "name": "Store Jobs in Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        3000,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "data": {
+          "jobIdHash": "={{ $json.jobIdHash }}",
+          "title": "={{ $json.title }}",
+          "company": "={{ $json.company }}",
+          "score": "={{ $json.score }}"
+        }
+      },
+      "id": "1e2f3a4b-5c6d-4e7f-8a9b-0c1d2e3f4a5b",
+      "name": "Store in Job History",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        3220,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "scoredJobs",
+        "options": {}
+      },
+      "id": "2f3a4b5c-6d7e-4f8a-9b0c-1d2e3f4a5b6c",
+      "name": "Aggregate Jobs for Summary",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        3440,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1",
+              "name": "summaryMessage",
+              "value": "={{ '🚀 **Daily Job Intelligence Report**\\n\\nFound and scored ' + $json.scoredJobs.length + ' new relevant jobs today:\\n\\n' + $json.scoredJobs.sort((a,b) => b.score - a.score).slice(0, 10).map((j, i) => (i+1) + '. **' + j.title + '** at **' + j.company + '** (' + j.location + ')\\n   🔥 Match Score: ' + j.score + '/100\\n   💡 ' + j.matchReason + '\\n   🔗 [View Job](' + j.url + ')\\n').join('\\n') + '\\nCheck Google Sheets for the full breakdown!' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "3a4b5c6d-7e8f-4a9b-0c1d-2e3f4a5b6c7d",
+      "name": "Generate Telegram Summary",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3660,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "<__PLACEHOLDER_VALUE__Your Telegram Chat ID (ask @get_id_bot)__>",
+        "text": "={{ $json.summaryMessage }}",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "4b5c6d7e-8f9a-4b0c-1d2e-3f4a5b6c7d8e",
+      "name": "Send Telegram Summary",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3880,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 🌅 PHASE 1: AUTOMATED DATA INGESTION\n\nRuns automatically every morning at 8 AM. Fetches job listings from LinkedIn, Naukri, Wellfound, and direct career sites using API endpoints.",
+        "height": 400,
+        "width": 540,
+        "color": 3
+      },
+      "id": "5c6d7e8f-9a0b-4c1d-2e3f-4a5b6c7d8e9f",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        200,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 🔍 PHASE 2: NORMALIZATION & FILTERING\n\n- Combines all sources into a single pipeline\n- Filters for 0-2 years experience range\n- Normalizes fields and removes exact duplicates\n- Checks local database to discard previously processed jobs",
+        "height": 400,
+        "width": 1640,
+        "color": 4
+      },
+      "id": "6d7e8f9a-0b1c-4d2e-3f4a-5b6c7d8e9f0a",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        780,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 🧠 PHASE 3: AI MATCH SCORING\n\nGPT-5 analyzes each new job description against the hardcoded candidate profile, assigning a 0-100 Match Score and detailing exact skill alignment and gaps.",
+        "height": 400,
+        "width": 540,
+        "color": 5
+      },
+      "id": "7e8f9a0b-1c2d-4e3f-4a5b-6c7d8e9f0a1b",
+      "name": "Sticky Note2",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2440,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 💾 PHASE 4: STORAGE & ALERTS\n\n- Logs all scored jobs to a Google Sheet\n- Saves jobId hashes to n8n local data table to prevent future duplicates\n- Sends a markdown summary of the top 10 jobs to Telegram",
+        "height": 400,
+        "width": 1100,
+        "color": 6
+      },
+      "id": "8f9a0b1c-2d3e-4f4a-5b6c-7d8e9f0a1b2c",
+      "name": "Sticky Note3",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3000,
+        180
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Daily Morning Trigger": {
+      "main": [
+        [
+          {
+            "node": "Search LinkedIn Jobs",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Search Naukri Jobs",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Search Wellfound Jobs",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Search Company Career Pages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search LinkedIn Jobs": {
+      "main": [
+        [
+          {
+            "node": "Combine All Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Naukri Jobs": {
+      "main": [
+        [
+          {
+            "node": "Combine All Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Wellfound Jobs": {
+      "main": [
+        [
+          {
+            "node": "Combine All Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Company Career Pages": {
+      "main": [
+        [
+          {
+            "node": "Combine All Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Combine All Jobs": {
+      "main": [
+        [
+          {
+            "node": "Split Jobs to Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Jobs to Items": {
+      "main": [
+        [
+          {
+            "node": "Filter 0-2 Years Experience",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter 0-2 Years Experience": {
+      "main": [
+        [
+          {
+            "node": "Normalize Job Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Job Data": {
+      "main": [
+        [
+          {
+            "node": "Remove Duplicate Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Duplicate Jobs": {
+      "main": [
+        [
+          {
+            "node": "Check Previously Seen Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Previously Seen Jobs": {
+      "main": [
+        [
+          {
+            "node": "Mark New Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark New Jobs": {
+      "main": [
+        [
+          {
+            "node": "Keep Only New Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Keep Only New Jobs": {
+      "main": [
+        [
+          {
+            "node": "Score Job Against Profile",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI GPT-5 Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Score Job Against Profile",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Job Score Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Score Job Against Profile",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Score Job Against Profile": {
+      "main": [
+        [
+          {
+            "node": "Combine Job with Score",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Combine Job with Score": {
+      "main": [
+        [
+          {
+            "node": "Store Jobs in Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Jobs in Google Sheets": {
+      "main": [
+        [
+          {
+            "node": "Store in Job History",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store in Job History": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Jobs for Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate Jobs for Summary": {
+      "main": [
+        [
+          {
+            "node": "Generate Telegram Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Telegram Summary": {
+      "main": [
+        [
+          {
+            "node": "Send Telegram Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "nodeGroups": [],
+  "tags": []
+}

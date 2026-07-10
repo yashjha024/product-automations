@@ -1,0 +1,912 @@
+{
+  "name": "AI Powered Exam Intelligence",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "08f8d7ad-5c97-463d-a1e5-68cb8e7a155d",
+      "name": "Start Workflow",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        240,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {
+          "joinPages": false,
+          "maxPages": 0
+        }
+      },
+      "id": "f81ee551-1412-4244-9ea6-5d15709c45c5",
+      "name": "Extract PDF Text",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        464,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "text": "={{ $json.text }}",
+        "schemaType": "fromJson",
+        "jsonSchemaExample": "{\"concepts\":[{\"name\":\"string\",\"category\":\"personality|event|treaty|act|organization|geography|economy|polity|science|current_affairs\",\"facts\":[\"array of key facts\"],\"dates\":[\"array of dates\"],\"locations\":[\"array of locations\"],\"relatedConcepts\":[\"array of related concept names\"],\"importance\":\"high|medium|low\"}]}",
+        "options": {}
+      },
+      "id": "4b27cdbd-d247-4911-abfc-a0ecc3da4086",
+      "name": "Extract Atomic Concepts",
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1.2,
+      "position": [
+        688,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "id": "048ecae1-f71b-4e83-9c1e-d75cae9e7b6b",
+      "name": "OpenAI Model - Concept Extraction",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        768,
+        624
+      ]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "concepts",
+        "options": {}
+      },
+      "id": "f8f80d29-7610-45f3-a326-12bdc4ec602e",
+      "name": "Flatten Concepts",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        1040,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "compare": "selectedFields",
+        "fieldsToCompare": "name",
+        "options": {}
+      },
+      "id": "c294f572-7e4a-4020-b9f0-8d09e1dc6e57",
+      "name": "Remove Duplicate Concepts",
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 1.1,
+      "position": [
+        1264,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analyze the concept \"{{ $json.name }}\" for the exam: <__PLACEHOLDER_VALUE__Selected Exam (e.g., UPSC Prelims, SSC CGL)__>.\n\nBased on previous year questions (PYQ) from the last 5-10 years:\n1. Count how many times this concept appeared in questions\n2. Identify recurring themes and question patterns\n3. Analyze current examination trends\n4. Detect shifts in question patterns\n5. Calculate probability of appearance\n\nConcept details:\nCategory: {{ $json.category }}\nFacts: {{ $json.facts }}\nDates: {{ $json.dates }}\nLocations: {{ $json.locations }}\n\nReturn structured analysis with scores.",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are an expert exam analyst specializing in competitive examinations. Analyze concepts based on previous year question patterns, trends, and historical importance. Provide accurate frequency counts and probability scores."
+        }
+      },
+      "id": "adc7144e-b0e5-4ae0-9188-9b84c8561337",
+      "name": "Analyze PYQ & Trends",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1488,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "id": "04a0662d-401a-4318-963f-2580af726090",
+      "name": "OpenAI Model - PYQ Analysis",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        1504,
+        624
+      ]
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\"pyqFrequency\":8,\"trendScore\":85,\"recentQuestions\":[\"Question 1\",\"Question 2\"],\"emergingTopics\":[\"Topic 1\",\"Topic 2\"],\"historicalImportance\":90}"
+      },
+      "id": "14f2ddca-4cac-4851-bcc2-8b50f0843e6e",
+      "name": "PYQ Analysis Schema",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1632,
+        624
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1",
+              "name": "conceptName",
+              "type": "string",
+              "value": "={{ $$(\"Remove Duplicate Concepts\").item.json.name }}"
+            },
+            {
+              "id": "2",
+              "name": "category",
+              "type": "string",
+              "value": "={{ $$(\"Remove Duplicate Concepts\").item.json.category }}"
+            },
+            {
+              "id": "3",
+              "name": "facts",
+              "type": "array",
+              "value": "={{ $$(\"Remove Duplicate Concepts\").item.json.facts }}"
+            },
+            {
+              "id": "4",
+              "name": "dates",
+              "type": "array",
+              "value": "={{ $$(\"Remove Duplicate Concepts\").item.json.dates }}"
+            },
+            {
+              "id": "5",
+              "name": "locations",
+              "type": "array",
+              "value": "={{ $$(\"Remove Duplicate Concepts\").item.json.locations }}"
+            },
+            {
+              "id": "6",
+              "name": "pyqFrequency",
+              "type": "number",
+              "value": "={{ $json.output.pyqFrequency }}"
+            },
+            {
+              "id": "7",
+              "name": "trendScore",
+              "type": "number",
+              "value": "={{ $json.output.trendScore }}"
+            },
+            {
+              "id": "8",
+              "name": "historicalImportance",
+              "type": "number",
+              "value": "={{ $json.output.historicalImportance }}"
+            },
+            {
+              "id": "9",
+              "name": "probabilityScore",
+              "type": "number",
+              "value": "={{ ($json.output.pyqFrequency * 0.4) + ($json.output.trendScore * 0.3) + ($json.output.historicalImportance * 0.3) }}"
+            },
+            {
+              "id": "10",
+              "name": "recentQuestions",
+              "type": "array",
+              "value": "={{ $json.output.recentQuestions }}"
+            },
+            {
+              "id": "11",
+              "name": "emergingTopics",
+              "type": "array",
+              "value": "={{ $json.output.emergingTopics }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6fc4b561-34ac-4dd8-b07f-c8181fb31d1a",
+      "name": "Combine Concept & PYQ Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1840,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "sortFieldsUi": {
+          "sortField": [
+            {
+              "fieldName": "probabilityScore",
+              "order": "descending"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "8569fef8-55f6-4b3b-ab72-4617bfd71172",
+      "name": "Sort by Probability Score",
+      "type": "n8n-nodes-base.sort",
+      "typeVersion": 1,
+      "position": [
+        2064,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Convert the following concept into ultra-high-yield revision notes for exam preparation.\n\nConcept: {{ $json.conceptName }}\nCategory: {{ $json.category }}\nFacts: {{ $json.facts }}\nDates: {{ $json.dates }}\nLocations: {{ $json.locations }}\nPYQ Frequency: {{ $json.pyqFrequency }}\nTrend Score: {{ $json.trendScore }}\nProbability Score: {{ $json.probabilityScore }}\n\nCreate:\n1. Compressed bullet-point notes (one-liners)\n2. Important dates with events\n3. Important personalities\n4. Important events\n5. Key takeaways for exam\n\nIgnore low-probability facts unless historically significant.",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are an expert at creating concise, high-yield exam revision notes. Focus on facts with high probability of appearing in exams. Use bullet points and compress information without losing critical details."
+        }
+      },
+      "id": "af2dd1dc-1ffd-463c-b66b-a17993944f0b",
+      "name": "Compress to High-Yield Notes",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        2288,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "id": "449fac0e-90bb-49ab-858b-459e3efc4b59",
+      "name": "OpenAI Model - Fact Compression",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        2304,
+        624
+      ]
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\"compressedNotes\":[\"• 2nd Mughal Emperor\",\"• Ascended throne: 1530\",\"• Defeated at Chausa (1539)\",\"• Defeated at Kannauj (1540)\",\"• Regained Delhi: 1555\",\"• Died: 1556\",\"• Important for Mughal restoration\"],\"importantDates\":[{\"date\":\"1530\",\"event\":\"Ascended throne\"},{\"date\":\"1539\",\"event\":\"Battle of Chausa\"}],\"importantPersonalities\":[\"Humayun\",\"Sher Shah Suri\"],\"importantEvents\":[\"Battle of Chausa\",\"Battle of Kannauj\",\"Mughal restoration\"],\"keyTakeaways\":[\"Mughal continuity\",\"Persian influence\"]}"
+      },
+      "id": "eca6b0a8-f43d-436d-90b2-f6a53b116611",
+      "name": "Compression Schema",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        2432,
+        624
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1",
+              "name": "conceptName",
+              "type": "string",
+              "value": "={{ $$(\"Combine Concept & PYQ Data\").item.json.conceptName }}"
+            },
+            {
+              "id": "2",
+              "name": "category",
+              "type": "string",
+              "value": "={{ $$(\"Combine Concept & PYQ Data\").item.json.category }}"
+            },
+            {
+              "id": "3",
+              "name": "probabilityScore",
+              "type": "number",
+              "value": "={{ $$(\"Combine Concept & PYQ Data\").item.json.probabilityScore }}"
+            },
+            {
+              "id": "4",
+              "name": "pyqFrequency",
+              "type": "number",
+              "value": "={{ $$(\"Combine Concept & PYQ Data\").item.json.pyqFrequency }}"
+            },
+            {
+              "id": "5",
+              "name": "trendScore",
+              "type": "number",
+              "value": "={{ $$(\"Combine Concept & PYQ Data\").item.json.trendScore }}"
+            },
+            {
+              "id": "6",
+              "name": "compressedNotes",
+              "type": "array",
+              "value": "={{ $json.output.compressedNotes }}"
+            },
+            {
+              "id": "7",
+              "name": "importantDates",
+              "type": "array",
+              "value": "={{ $json.output.importantDates }}"
+            },
+            {
+              "id": "8",
+              "name": "importantPersonalities",
+              "type": "array",
+              "value": "={{ $json.output.importantPersonalities }}"
+            },
+            {
+              "id": "9",
+              "name": "importantEvents",
+              "type": "array",
+              "value": "={{ $json.output.importantEvents }}"
+            },
+            {
+              "id": "10",
+              "name": "keyTakeaways",
+              "type": "array",
+              "value": "={{ $json.output.keyTakeaways }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "cdb83e0a-cc89-405d-9a4a-5cc8edbcf729",
+      "name": "Combine Notes Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2640,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "maxItems": 30
+      },
+      "id": "687b7a34-b230-4606-9601-cb1a7fa214cf",
+      "name": "Top 30 Concepts",
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        2864,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Generate probable exam questions for the concept: {{ $json.conceptName }}\n\nExam: <__PLACEHOLDER_VALUE__Selected Exam (e.g., UPSC Prelims, SSC CGL)__>\nCategory: {{ $json.category }}\nCompressed Notes: {{ $json.compressedNotes }}\nImportant Dates: {{ $json.importantDates }}\nImportant Events: {{ $json.importantEvents }}\nPYQ Frequency: {{ $json.pyqFrequency }}\nTrend Score: {{ $json.trendScore }}\nProbability Score: {{ $json.probabilityScore }}\n\nGenerate 3-5 high-probability multiple-choice questions based on:\n1. Previous year question patterns\n2. Current examination trends\n3. Historical importance\n\nFor each question provide:\n- Question text\n- 4 options\n- Correct answer\n- Probability score (1-100)\n- Topic\n- Explanation\n- Source concepts",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are an expert question paper setter for competitive examinations. Generate realistic multiple-choice questions that match the style and difficulty of actual exam questions. Base questions on PYQ patterns and current trends."
+        }
+      },
+      "id": "0b5028f9-a5e4-4613-bc5d-b803a3447cfa",
+      "name": "Generate Predicted Questions",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        3088,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "id": "efddc74b-856f-4a33-b868-bcbf26fbb0e8",
+      "name": "OpenAI Model - Question Generation",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        3104,
+        624
+      ]
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\"predictedQuestions\":[{\"question\":\"In which year did Humayun ascend the Mughal throne?\",\"options\":[\"1526\",\"1530\",\"1540\",\"1556\"],\"correctAnswer\":\"1530\",\"probabilityScore\":85,\"topic\":\"Mughal History\",\"explanation\":\"Humayun succeeded Babur in 1530 as the second Mughal emperor.\",\"sourceConcepts\":[\"Humayun\",\"Mughal Empire\"]}]}"
+      },
+      "id": "7d15b009-33da-422d-bb39-516d4b12a331",
+      "name": "Question Schema",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        3232,
+        624
+      ]
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "allConcepts",
+        "options": {}
+      },
+      "id": "05fe2924-75fb-4964-b6ba-afa2f392d6eb",
+      "name": "Aggregate All Data",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        3440,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Create a comprehensive exam revision document from the following data:\n\nAll Concepts: {{ $json.allConcepts }}\n\nExam: <__PLACEHOLDER_VALUE__Selected Exam (e.g., UPSC Prelims, SSC CGL)__>\n\nGenerate the following sections in clean, formatted text:\n\n1. EXECUTIVE SUMMARY\n   - Overview of total concepts analyzed\n   - Key statistics (avg probability score, top categories)\n   - Study recommendations\n\n2. TOP 30 MOST IMPORTANT TOPICS\n   - List with probability scores\n   - Color-coded by importance (High: >80, Medium: 60-80, Low: <60)\n\n3. ULTRA SHORT REVISION NOTES\n   - Bullet points for each concept\n   - Include importance score, PYQ frequency, trend score\n\n4. IMPORTANT DATES\n   - Chronological table format\n   - Date | Event | Related Concept\n\n5. IMPORTANT PERSONALITIES\n   - Alphabetical list with key facts\n\n6. IMPORTANT EVENTS\n   - Categorized by subject area\n\n7. PREDICTED QUESTIONS\n   - Top 20 questions with probability scores\n   - Include options, answers, explanations\n\n8. LAST MINUTE REVISION SHEET\n   - One-page quick facts\n   - Only highest probability items\n\nFormat with headings, tables, and bullet points suitable for Google Docs.",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are an expert educational content formatter. Create well-structured, exam-focused revision documents with clear sections, tables, and formatting suitable for Google Docs. Prioritize clarity and readability."
+        }
+      },
+      "id": "bdbd79d4-c589-4fc3-ae81-e20039f71e6c",
+      "name": "Format Document Content",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        3664,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "id": "b4c87251-e6d6-4d8c-bf99-88ef94c5bb59",
+      "name": "OpenAI Model - Document Generation",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        3680,
+        624
+      ]
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\"executiveSummary\":\"Summary text\",\"top30Topics\":[\"Topic 1\",\"Topic 2\"],\"revisionNotes\":\"Formatted notes\",\"importantDates\":\"Formatted dates table\",\"importantPersonalities\":\"Formatted personalities\",\"importantEvents\":\"Formatted events\",\"predictedQuestions\":\"Formatted questions\",\"lastMinuteSheet\":\"Quick revision points\"}"
+      },
+      "id": "f0425a8c-ba28-4e9a-be3a-75c587cf445b",
+      "name": "Document Schema",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        3808,
+        624
+      ]
+    },
+    {
+      "parameters": {
+        "folderId": "<__PLACEHOLDER_VALUE__Google Drive Folder ID__>",
+        "title": "=Exam Intelligence Report - {{ $now.toFormat(\"yyyy-MM-dd HH:mm\") }}"
+      },
+      "id": "2ec69b8d-f26e-48e5-80fe-62c2ace44c9d",
+      "name": "Create Google Doc",
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        4016,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentURL": "={{ $json.id }}",
+        "actionsUi": {
+          "actionFields": [
+            {
+              "action": "insert",
+              "text": "=EXAM INTELLIGENCE & PYQ PATTERN ANALYSIS SYSTEM\n\n═══════════════════════════════════════════════════\n\nSECTION 1: EXECUTIVE SUMMARY\n{{ $(\"Format Document Content\").item.json.output.executiveSummary }}\n\n═══════════════════════════════════════════════════\n\nSECTION 2: TOP 30 MOST IMPORTANT TOPICS\n{{ $(\"Format Document Content\").item.json.output.top30Topics }}\n\n═══════════════════════════════════════════════════\n\nSECTION 3: ULTRA SHORT REVISION NOTES\n{{ $(\"Format Document Content\").item.json.output.revisionNotes }}\n\n═══════════════════════════════════════════════════\n\nSECTION 4: IMPORTANT DATES\n{{ $(\"Format Document Content\").item.json.output.importantDates }}\n\n═══════════════════════════════════════════════════\n\nSECTION 5: IMPORTANT PERSONALITIES\n{{ $(\"Format Document Content\").item.json.output.importantPersonalities }}\n\n═══════════════════════════════════════════════════\n\nSECTION 6: IMPORTANT EVENTS\n{{ $(\"Format Document Content\").item.json.output.importantEvents }}\n\n═══════════════════════════════════════════════════\n\nSECTION 7: PREDICTED QUESTIONS\n{{ $(\"Format Document Content\").item.json.output.predictedQuestions }}\n\n═══════════════════════════════════════════════════\n\nSECTION 8: LAST MINUTE REVISION SHEET\n{{ $(\"Format Document Content\").item.json.output.lastMinuteSheet }}\n\n═══════════════════════════════════════════════════\n\nGenerated: {{ $now.toISO() }}"
+            }
+          ]
+        }
+      },
+      "id": "14dd8f59-768b-4031-b498-94e5414baf7b",
+      "name": "Update Doc Content",
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        4240,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 📄 STEP 1: PDF UPLOAD & EXTRACTION\n\nUpload one or more PDFs (10-200 pages each).\nText is extracted page by page for processing.",
+        "height": 200,
+        "width": 520,
+        "color": 2
+      },
+      "id": "cf3c4d63-0230-4e41-9742-affe31197f0a",
+      "name": "Sticky Note ca6401fb",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        144,
+        368
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 🧠 STEP 2: CONCEPT EXTRACTION\n\nAI extracts atomic concepts:\n- Personalities, events, dates, locations\n- Treaties, acts, organizations\n- Geography, economy, polity, science\n- Duplicates are removed",
+        "height": 200,
+        "width": 740,
+        "color": 3
+      },
+      "id": "55a0592d-5777-4523-abb1-c770ab892b2f",
+      "name": "Sticky Note 2dfb8c01",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        656,
+        368
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 📊 STEP 3-4: PYQ & TREND ANALYSIS\n\nAnalyzes previous 5-10 years of questions:\n- PYQ frequency calculation\n- Trend score analysis\n- Emerging topics detection\n- Probability scoring",
+        "height": 200,
+        "width": 300,
+        "color": 4
+      },
+      "id": "42b4bf49-87a5-4343-b5a1-b0fd17346d00",
+      "name": "Sticky Note 4f4d1849",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1296,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 🎯 STEP 5-7: RANKING & COMPRESSION\n\nRanks concepts by probability.\nCompresses facts into high-yield notes.\nGenerates exam-focused bullet points.",
+        "height": 200,
+        "width": 960,
+        "color": 5
+      },
+      "id": "6f5bc48e-0a4f-4e41-af32-c4066ccca8c4",
+      "name": "Sticky Note 8023050d",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1520,
+        368
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## ❓ STEP 8: QUESTION GENERATION\n\nGenerates predicted questions:\n- Top 20/50/100 probable questions\n- Multiple choice format\n- Probability scores\n- Explanations included",
+        "height": 200,
+        "width": 520,
+        "color": 6
+      },
+      "id": "09a9dd66-0034-490a-ad4e-054dc59dbe0a",
+      "name": "Sticky Note 700a55fd",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2432,
+        368
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 📝 STEP 9: GOOGLE DOC OUTPUT\n\nCreates comprehensive revision document:\n- Executive summary\n- Top 30 topics\n- Revision notes\n- Dates, personalities, events\n- Predicted questions\n- Last minute sheet",
+        "height": 200,
+        "width": 960,
+        "color": 7
+      },
+      "id": "8cf3bf18-65d5-42e6-a1ea-fec4b362f4a7",
+      "name": "Sticky Note f071378b",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2720,
+        368
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Start Workflow": {
+      "main": [
+        [
+          {
+            "node": "Extract PDF Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract PDF Text": {
+      "main": [
+        [
+          {
+            "node": "Extract Atomic Concepts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Atomic Concepts": {
+      "main": [
+        [
+          {
+            "node": "Flatten Concepts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Model - Concept Extraction": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Extract Atomic Concepts",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Flatten Concepts": {
+      "main": [
+        [
+          {
+            "node": "Remove Duplicate Concepts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Duplicate Concepts": {
+      "main": [
+        [
+          {
+            "node": "Analyze PYQ & Trends",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze PYQ & Trends": {
+      "main": [
+        [
+          {
+            "node": "Combine Concept & PYQ Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Model - PYQ Analysis": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Analyze PYQ & Trends",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PYQ Analysis Schema": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Analyze PYQ & Trends",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Combine Concept & PYQ Data": {
+      "main": [
+        [
+          {
+            "node": "Sort by Probability Score",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sort by Probability Score": {
+      "main": [
+        [
+          {
+            "node": "Compress to High-Yield Notes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compress to High-Yield Notes": {
+      "main": [
+        [
+          {
+            "node": "Combine Notes Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Model - Fact Compression": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Compress to High-Yield Notes",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compression Schema": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Compress to High-Yield Notes",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Combine Notes Data": {
+      "main": [
+        [
+          {
+            "node": "Top 30 Concepts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Top 30 Concepts": {
+      "main": [
+        [
+          {
+            "node": "Generate Predicted Questions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Predicted Questions": {
+      "main": [
+        [
+          {
+            "node": "Aggregate All Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Model - Question Generation": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Generate Predicted Questions",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Question Schema": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Generate Predicted Questions",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate All Data": {
+      "main": [
+        [
+          {
+            "node": "Format Document Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Document Content": {
+      "main": [
+        [
+          {
+            "node": "Create Google Doc",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Model - Document Generation": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Format Document Content",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Document Schema": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Format Document Content",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Google Doc": {
+      "main": [
+        [
+          {
+            "node": "Update Doc Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "nodeGroups": [],
+  "tags": []
+}

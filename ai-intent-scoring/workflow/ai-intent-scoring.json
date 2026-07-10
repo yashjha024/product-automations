@@ -1,0 +1,160 @@
+{
+  "name": "AI Intent Scoring",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+      "name": "Start",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        240,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Evaluate the following customer browsing behavior and calculate a 1-10 Purchase Intent Score.\n\nCustomer ID: {{ $json.customerId }}\nTotal Time Spent (seconds): {{ $json.browsingHistory.timeSpent }}\nProduct Views: {{ $json.browsingHistory.productViews }}\nCart Additions: {{ $json.browsingHistory.cartAdditions }}\nRepeat Visits: {{ $json.browsingHistory.repeatVisits }}\n\nScoring Guidelines:\n- timeSpentScore: 1000+ seconds = High (8-10), 300-1000 = Medium (4-7), <300 = Low (1-3)\n- productViewScore: Multiple views of same product or category = High\n- cartAdditionScore: Any cart addition immediately boosts overall score significantly\n- repeatVisitScore: 3+ visits = High intent\n\nReturn exact signal scores, overall intentScore (1-10), and a concise reasoning summary.",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are a lead scoring and e-commerce conversion intelligence AI. Evaluate behavioral signals accurately to predict likelihood to buy."
+        }
+      },
+      "id": "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e",
+      "name": "Analyze Intent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        460,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "id": "c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f",
+      "name": "OpenAI Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.1,
+      "position": [
+        460,
+        540
+      ]
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"timeSpentScore\": 8,\n  \"productViewScore\": 9,\n  \"cartAdditionScore\": 10,\n  \"repeatVisitScore\": 7,\n  \"intentScore\": 9,\n  \"reasoning\": \"Customer spent over 1200 seconds browsing, viewed the flagship product 4 times, added item to cart, and has returned across 3 sessions.\"\n}"
+      },
+      "id": "d4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a",
+      "name": "Intent Score Schema",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        600,
+        540
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "base": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "table": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Customer ID": "={{ $json.customerId }}",
+            "Time Spent Score": "={{ $json.output.timeSpentScore }}",
+            "Product View Score": "={{ $json.output.productViewScore }}",
+            "Cart Addition Score": "={{ $json.output.cartAdditionScore }}",
+            "Repeat Visit Score": "={{ $json.output.repeatVisitScore }}",
+            "Overall Intent Score": "={{ $json.output.intentScore }}",
+            "Reasoning": "={{ $json.output.reasoning }}",
+            "Analyzed At": "={{ $now.toISO() }}"
+          },
+          "matchingColumns": [
+            "Customer ID"
+          ],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b",
+      "name": "Store in Airtable",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        820,
+        340
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Analyze Intent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze Intent": {
+      "main": [
+        [
+          {
+            "node": "Store in Airtable",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Analyze Intent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Intent Score Schema": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Analyze Intent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "nodeGroups": [],
+  "tags": []
+}

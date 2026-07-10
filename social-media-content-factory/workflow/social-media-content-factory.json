@@ -1,0 +1,382 @@
+{
+  "name": "Social Media Content Factory",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "e8d6484e-37bf-4bfb-aee9-43c7df47e9ad",
+      "name": "When clicking \"Test workflow\"",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        240,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Conduct comprehensive research on the topic: {{ $json.topic || \"AI Agents in Enterprise Workflow Automation\" }}\n\nResearch goals:\n1. Find 5-7 latest industry stats and facts\n2. Identify 3 major trends or breakthroughs\n3. Gather contrarian or provocative viewpoints\n4. Extract real-world use cases or case studies\n5. Identify key influencers and what they are saying\n\nOrganize findings into:\n- Executive Summary\n- Key Stats & Data\n- Industry Trends\n- Contrarian Angles\n- Case Studies & Examples\n- Target Audience Pain Points",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are a senior tech content researcher and industry analyst. Your research is thorough, data-driven, and designed to fuel viral, high-engagement social media content across platforms. Always cite specific numbers and concrete examples."
+        }
+      },
+      "id": "c1f71df8-86f7-4dc4-b770-b74ccbb1dbe2",
+      "name": "Research Topic",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        460,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "id": "279a0ec2-0310-44ec-b8cb-4654fca648c6",
+      "name": "OpenAI GPT-5",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        480,
+        560
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "52fcfbc5-8dfb-40aa-bce9-0d1791a82200",
+      "name": "Research Tool",
+      "type": "n8n-nodes-base.perplexityTool",
+      "typeVersion": 1,
+      "position": [
+        600,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Using this research, write a viral, high-converting LinkedIn post:\n\nResearch:\n{{ $json.output }}\n\nGuidelines:\n- Hook: Strong, contrarian or data-driven opening line (no \"I'm excited to share...\")\n- Format: Short paragraphs, lots of white space, bullet points\n- Content: Share actionable insights, specific stats, and a clear point of view\n- Structure:\n  1. The Hook (1-2 lines that force a \"see more\" click)\n  2. The Problem / Old Way\n  3. The Shift / New Data (use stats from research)\n  4. The Solution / Framework (3-5 actionable bullets)\n  5. The Takeaway (strong concluding thought)\n  6. Engagement Question (ask audience to comment)\n- Tone: Authoritative yet conversational, zero fluff, professional\n- Target length: 1200-1500 characters",
+        "options": {
+          "systemMessage": "You are a top 1% LinkedIn ghostwriter for B2B SaaS founders and AI executives. You write posts that generate 100k+ impressions and drive inbound leads. You never use generic buzzwords or corporate jargon."
+        }
+      },
+      "id": "01cfffc0-7603-4cbf-bb24-3475dbe2f183",
+      "name": "Generate LinkedIn Post",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        780,
+        140
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1",
+              "name": "topic",
+              "type": "string",
+              "value": "={{ $(\"Research Topic\").item.json.topic || \"AI Agents in Enterprise Workflow Automation\" }}"
+            },
+            {
+              "id": "2",
+              "name": "researchSummary",
+              "type": "string",
+              "value": "={{ $(\"Research Topic\").item.json.output }}"
+            },
+            {
+              "id": "3",
+              "name": "linkedInPost",
+              "type": "string",
+              "value": "={{ $(\"Generate LinkedIn Post\").item.json.output }}"
+            },
+            {
+              "id": "4",
+              "name": "twitterThread",
+              "type": "string",
+              "value": "={{ $(\"Generate Twitter Thread\").item.json.output }}"
+            },
+            {
+              "id": "5",
+              "name": "blogOutline",
+              "type": "string",
+              "value": "={{ $(\"Generate Blog Outline\").item.json.output }}"
+            },
+            {
+              "id": "6",
+              "name": "imagePrompts",
+              "type": "string",
+              "value": "={{ $(\"Create Image Prompts\").item.json.output }}"
+            },
+            {
+              "id": "7",
+              "name": "generatedAt",
+              "type": "string",
+              "value": "={{ $now.toISO() }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "8c4ab7c5-5152-4be7-a2f6-3472ef588995",
+      "name": "Combine All Content",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1120,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Using this research, write a 7-10 tweet viral thread for X (Twitter):\n\nResearch:\n{{ $json.output }}\n\nGuidelines:\n- Tweet 1 (Hook): Must be irresistible. Use a surprising stat, bold claim, or \"Here's what nobody is telling you about [topic]:\" format.\n- Tweet 2: Why this matters right now (urgency/context).\n- Tweets 3-7: The core value (1 insight/case study/stat per tweet). Keep punchy.\n- Tweet 8: Common mistakes people make regarding this topic.\n- Tweet 9: Summary checklist or framework.\n- Tweet 10 (CTA): Call to action (follow, retweet, comment, or check link).\n- Formatting: Number each tweet (e.g., 1/10, 2/10). Keep under 280 characters per tweet. Use line breaks.",
+        "options": {
+          "systemMessage": "You are a master Twitter/X thread creator whose threads consistently go viral and gain thousands of bookmarks. You write dense, value-packed tweets with zero filler."
+        }
+      },
+      "id": "eecfa7ef-c063-4416-bd0e-dbe7df8442a8",
+      "name": "Generate Twitter Thread",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        780,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Using this research, create a comprehensive, SEO-optimized blog post outline:\n\nResearch:\n{{ $json.output }}\n\nGuidelines:\n- Target article length: 2,500+ words\n- Structure:\n  1. Catchy SEO Title (provide 3 options)\n  2. Meta Description (under 160 chars)\n  3. Introduction (Hook, Problem, Thesis statement)\n  4. H2: Background / Why This Matters Now (include stats)\n  5. H2: Deep Dive into Core Concepts (break into H3 subtopics)\n  6. H2: Real-World Case Studies / Use Cases (from research)\n  7. H2: Step-by-Step Implementation Guide / Best Practices\n  8. H2: Future Outlook & Predictions\n  9. Conclusion & Call to Action\n- For each H2/H3 section, provide 3-4 bullet points describing exact talking points and data to include.\n- Include suggested target keywords and internal/external link ideas.",
+        "options": {
+          "systemMessage": "You are an expert SEO content strategist and managing editor for a leading tech publication. You design outlines that rank #1 on Google and keep readers engaged from start to finish."
+        }
+      },
+      "id": "277e9b01-e77c-47fc-8fcc-2a3b2b8d0028",
+      "name": "Generate Blog Outline",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        780,
+        540
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Based on this research, generate 3 detailed AI image generation prompts (for Midjourney v6 or DALL-E 3) that visual artists could use to create eye-catching graphics for these social media posts:\n\nResearch:\n{{ $json.output }}\n\nProvide:\n1. Hero Image Prompt (for Blog header / LinkedIn banner): Professional, conceptual, modern tech aesthetic (e.g., isometric 3D, neon accents, clean minimalist tech representation).\n2. Infographic / Diagram Prompt (for LinkedIn/Twitter carousel slide): Clear visual metaphor of the workflow/process described.\n3. Abstract / Editorial Prompt (for high-impact Twitter/X graphic): Striking visual metaphor representing the breakthrough or contrarian angle.\n\nFormat each prompt clearly with exact style modifiers, lighting, color palette, and composition details.",
+        "options": {
+          "systemMessage": "You are a creative art director and expert AI prompt engineer specializing in Midjourney v6 and DALL-E 3 for corporate and tech branding."
+        }
+      },
+      "id": "0df6bb51-14ab-4c3e-ad0b-5f056d6ad5e7",
+      "name": "Create Image Prompts",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        780,
+        740
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "databaseId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "title": "={{ $json.topic }} - Content Pack ({{ $now.toFormat(\"yyyy-MM-dd\") }})",
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Status|select",
+              "selectValue": "Draft"
+            },
+            {
+              "key": "Generated At|date",
+              "dateValue": "={{ $json.generatedAt }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a6b7d2bf-e730-4e3a-bf31-0cfd6dc2ea37",
+      "name": "Save to Notion",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        1340,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 🧠 PHASE 1: AI TOPIC RESEARCH\n\nPerplexity + GPT-5 research agent gathers stats, trends, contrarian views, and case studies on the target topic.",
+        "height": 200,
+        "width": 480,
+        "color": 3
+      },
+      "id": "be724c9c-af35-4ae2-a279-d500cb444bda",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        220,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## ✍️ PHASE 2: MULTI-CHANNEL PARALLEL CREATION\n\n4 specialized AI agents simultaneously generate:\n1. Viral LinkedIn Post (B2B ghostwriter style)\n2. 10-Tweet X Thread (high-engagement format)\n3. 2500+ word Blog Outline (SEO-optimized)\n4. 3 AI Image Prompts (Midjourney/DALL-E 3)",
+        "height": 680,
+        "width": 340,
+        "color": 4
+      },
+      "id": "e4c5b364-ffb4-42ea-a4ff-a0104169ed56",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        740,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 📦 PHASE 3: AGGREGATE & EXPORT\n\nCombines all generated assets into a unified Content Pack and stores it in Notion with status 'Draft'.",
+        "height": 200,
+        "width": 460,
+        "color": 5
+      },
+      "id": "2da16b67-eef4-4fec-ad4a-ca2da0045e12",
+      "name": "Sticky Note2",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1100,
+        280
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking \"Test workflow\"": {
+      "main": [
+        [
+          {
+            "node": "Research Topic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Research Topic": {
+      "main": [
+        [
+          {
+            "node": "Generate LinkedIn Post",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Generate Twitter Thread",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Generate Blog Outline",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Create Image Prompts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI GPT-5": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Research Topic",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Generate LinkedIn Post",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Generate Twitter Thread",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Generate Blog Outline",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Create Image Prompts",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Research Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Research Topic",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate LinkedIn Post": {
+      "main": [
+        [
+          {
+            "node": "Combine All Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Combine All Content": {
+      "main": [
+        [
+          {
+            "node": "Save to Notion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "nodeGroups": [],
+  "tags": []
+}

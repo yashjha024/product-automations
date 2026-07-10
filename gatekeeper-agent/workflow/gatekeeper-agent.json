@@ -1,0 +1,637 @@
+{
+  "name": "Gatekepper agent",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "messages"
+        ],
+        "options": {}
+      },
+      "id": "e963ce32-0c9f-43de-a89c-d074bba49cfc",
+      "name": "WhatsApp Replies",
+      "type": "n8n-nodes-base.whatsAppTrigger",
+      "typeVersion": 1,
+      "position": [
+        384,
+        416
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a9ccb4a3-16ca-43bc-bd14-8784d1f275cd",
+              "name": "customerId",
+              "value": "={{ $json.contacts[0].wa_id }}",
+              "type": "string"
+            },
+            {
+              "id": "0d2eb2ad-3b5f-4a0f-90e9-b5cdab074214",
+              "name": "messageText",
+              "value": "={{ $json.messages[0].text.body }}",
+              "type": "string"
+            },
+            {
+              "id": "18fbc8d6-6b2c-4903-88ec-a3cfd3420455",
+              "name": "channel",
+              "value": "WhatsApp",
+              "type": "string"
+            },
+            {
+              "id": "8bb094e9-fc91-4952-b88d-a41703666b6c",
+              "name": "receivedAt",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c620be4e-ba2f-4dd3-97df-a33f44ee8e87",
+      "name": "Normalize WhatsApp",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        608,
+        416
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analyze the following customer reply and decide the next action.\n\nCustomer Message: \"{{ $json.messageText }}\"\nChannel: {{ $json.channel }}\n\nReturn:\n- action: one of stop_messaging, pause_automation, escalate_to_support, continue_automation\n- intent: short label (e.g. unsubscribe, support_request, general_reply, purchase_intent)\n- sentiment: positive, neutral, negative\n- confidence: 0.0 to 1.0\n- reason: 1 sentence explaining the decision",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are a customer communication gatekeeper AI. Your job is to protect customer experience and compliance by classifying incoming replies accurately.\n\nRules:\n- If the customer asks to stop, unsubscribe, opt out, or remove them from the list, action MUST be stop_messaging.\n- If the customer reports a problem, asks for help, has a complaint, or needs human intervention, action MUST be escalate_to_support.\n- If the customer asks a question or asks to hold off temporarily, action MUST be pause_automation.\n- If the message is just a positive acknowledgment (e.g. \"thanks\", \"got it\", \"looks good\") or routine continuation, action should be continue_automation.\n- When in doubt between continue and pause/escalate, always err on the side of caution and choose pause_automation or escalate_to_support."
+        }
+      },
+      "id": "060a03d0-3ae8-412f-90e6-5bc5ebef702b",
+      "name": "AI Gatekeeper",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        864,
+        608
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "id": "daafc4c6-fa3e-4ec2-9e96-a97cdb0ea17a",
+      "name": "OpenAI Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.1,
+      "position": [
+        864,
+        832
+      ]
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"action\": \"stop_messaging\",\n  \"intent\": \"unsubscribe\",\n  \"sentiment\": \"negative\",\n  \"confidence\": 0.98,\n  \"reason\": \"Customer explicitly asked to stop sending messages.\"\n}"
+      },
+      "id": "0e59a9ec-0cd3-4e8c-85ce-b5a8e0e64c1c",
+      "name": "Structured Output Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        1008,
+        832
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.output.action }}",
+                    "rightValue": "stop_messaging",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Stop"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "99ea7fc4-d0ae-43ec-9ae6-d1dcc559e8f4",
+                    "leftValue": "={{ $json.output.action }}",
+                    "rightValue": "pause_automation",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Pause"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "5f1bc32e-ef1c-4384-ad4b-bcda593eecae",
+                    "leftValue": "={{ $json.output.action }}",
+                    "rightValue": "escalate_to_support",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Escalate"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "d047321f-82ff-4b13-81ef-e7cdd94d9a6d",
+                    "leftValue": "={{ $json.output.action }}",
+                    "rightValue": "continue_automation",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Continue"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4b68eef0-8f92-4ab1-aa6b-dc73ae3ffaa2",
+      "name": "Route by Action",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        1216,
+        608
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "base": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "table": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Customer ID": "={{ $('Normalize WhatsApp').item.json.customerId || $('Normalize Email').item.json.customerId || $('Normalize Support').item.json.customerId }}",
+            "Channel": "={{ $('Normalize WhatsApp').item.json.channel || $('Normalize Email').item.json.channel || $('Normalize Support').item.json.channel }}",
+            "Status": "Stopped",
+            "Intent": "={{ $json.output.intent }}",
+            "Sentiment": "={{ $json.output.sentiment }}",
+            "Reason": "={{ $json.output.reason }}",
+            "Action Taken At": "={{ $now.toISO() }}"
+          },
+          "matchingColumns": [
+            "Customer ID"
+          ],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "d464ac64-2db2-484d-b94f-4d32a4eab224",
+      "name": "Store Stop Status",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        1472,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "base": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "table": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Customer ID": "={{ $('Normalize WhatsApp').item.json.customerId || $('Normalize Email').item.json.customerId || $('Normalize Support').item.json.customerId }}",
+            "Channel": "={{ $('Normalize WhatsApp').item.json.channel || $('Normalize Email').item.json.channel || $('Normalize Support').item.json.channel }}",
+            "Status": "Paused",
+            "Intent": "={{ $json.output.intent }}",
+            "Sentiment": "={{ $json.output.sentiment }}",
+            "Reason": "={{ $json.output.reason }}",
+            "Action Taken At": "={{ $now.toISO() }}"
+          },
+          "matchingColumns": [
+            "Customer ID"
+          ],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "ee7e0cd0-ab55-46f9-86ca-6efb7a597a21",
+      "name": "Store Pause Status",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        1472,
+        544
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "base": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "table": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Customer ID": "={{ $('Normalize WhatsApp').item.json.customerId || $('Normalize Email').item.json.customerId || $('Normalize Support').item.json.customerId }}",
+            "Channel": "={{ $('Normalize WhatsApp').item.json.channel || $('Normalize Email').item.json.channel || $('Normalize Support').item.json.channel }}",
+            "Status": "Escalated",
+            "Intent": "={{ $json.output.intent }}",
+            "Sentiment": "={{ $json.output.sentiment }}",
+            "Reason": "={{ $json.output.reason }}",
+            "Action Taken At": "={{ $now.toISO() }}"
+          },
+          "matchingColumns": [
+            "Customer ID"
+          ],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "ca1a1e78-9fec-469b-8e2b-2a2cdbe2b015",
+      "name": "Store Escalate Status",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        1472,
+        704
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "base": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "table": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Customer ID": "={{ $('Normalize WhatsApp').item.json.customerId || $('Normalize Email').item.json.customerId || $('Normalize Support').item.json.customerId }}",
+            "Channel": "={{ $('Normalize WhatsApp').item.json.channel || $('Normalize Email').item.json.channel || $('Normalize Support').item.json.channel }}",
+            "Status": "Active",
+            "Intent": "={{ $json.output.intent }}",
+            "Sentiment": "={{ $json.output.sentiment }}",
+            "Reason": "={{ $json.output.reason }}",
+            "Action Taken At": "={{ $now.toISO() }}"
+          },
+          "matchingColumns": [
+            "Customer ID"
+          ],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "e81d7637-231a-4643-ad79-df55f3edff92",
+      "name": "Store Continue Status",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        1472,
+        864
+      ]
+    },
+    {
+      "parameters": {
+        "postProcessAction": "nothing",
+        "options": {}
+      },
+      "id": "1fa0ac62-d9f7-48f1-a1bf-d8161ca1286c",
+      "name": "Email Replies",
+      "type": "n8n-nodes-base.emailReadImap",
+      "typeVersion": 2,
+      "position": [
+        384,
+        608
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "180b2d6a-cb1b-4f9e-8c33-ff1a6c08abcf",
+              "name": "customerId",
+              "value": "={{ $json.from }}",
+              "type": "string"
+            },
+            {
+              "id": "e55df85d-af7f-4ca2-ae06-bfd12f309a47",
+              "name": "messageText",
+              "value": "={{ $json.textPlain }}",
+              "type": "string"
+            },
+            {
+              "id": "890af093-875f-4d69-b5f7-f3775c02b28c",
+              "name": "channel",
+              "value": "Email",
+              "type": "string"
+            },
+            {
+              "id": "787e9140-5b23-4cf1-aeaa-0447fa419358",
+              "name": "receivedAt",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "bc33719a-ffaa-4afb-9ae2-20f513d6a45e",
+      "name": "Normalize Email",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        608,
+        608
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "support-message",
+        "options": {}
+      },
+      "id": "4220ec2c-15be-43fa-a6be-4bca413dccaa",
+      "name": "Support Messages",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        384,
+        800
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "bd0536c0-6d4d-4ba6-ae23-68f7734ea03a",
+              "name": "customerId",
+              "value": "={{ $json.body.userId }}",
+              "type": "string"
+            },
+            {
+              "id": "df99d217-4ac9-4d6d-b8d4-ca67d8ae6ba2",
+              "name": "messageText",
+              "value": "={{ $json.body.message }}",
+              "type": "string"
+            },
+            {
+              "id": "db00e844-3259-450f-90e8-eb6e5563f1f7",
+              "name": "channel",
+              "value": "Webhook",
+              "type": "string"
+            },
+            {
+              "id": "e6f47702-de56-43f1-b968-aa1bb7334cd9",
+              "name": "receivedAt",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e14bfa4a-db37-4f40-84a8-6f6eb5e65697",
+      "name": "Normalize Support",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        608,
+        800
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "WhatsApp Replies": {
+      "main": [
+        [
+          {
+            "node": "Normalize WhatsApp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize WhatsApp": {
+      "main": [
+        [
+          {
+            "node": "AI Gatekeeper",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Gatekeeper": {
+      "main": [
+        [
+          {
+            "node": "Route by Action",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Gatekeeper",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Gatekeeper",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by Action": {
+      "main": [
+        [
+          {
+            "node": "Store Stop Status",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Store Pause Status",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Store Escalate Status",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Store Continue Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email Replies": {
+      "main": [
+        [
+          {
+            "node": "Normalize Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Email": {
+      "main": [
+        [
+          {
+            "node": "AI Gatekeeper",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Support Messages": {
+      "main": [
+        [
+          {
+            "node": "Normalize Support",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Support": {
+      "main": [
+        [
+          {
+            "node": "AI Gatekeeper",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}
