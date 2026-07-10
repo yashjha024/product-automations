@@ -85,6 +85,66 @@ Turns incoming emails into structured actions by identifying what needs attentio
 
 ---
 
+### AI Powered Exam Intelligence
+
+Transforms long-form study material into prioritized exam intelligence by extracting concepts, ranking high-value topics, generating revision notes, and creating probable practice questions.
+
+**Problem:** Competitive exam preparation often involves large volumes of material with little guidance on what deserves the most attention, making effective prioritization difficult.
+
+**Workflow:** Study PDFs → concept extraction → PYQ & trend analysis → probability scoring → revision notes → predicted questions → Google Docs report
+
+[Explore the automation →](./ai-powered-exam-intelligence)
+
+---
+
+### Social Media Content Factory
+
+Generates platform-specific content from a single research workflow, producing LinkedIn posts, Twitter threads, blog outlines, and image prompts.
+
+**Problem:** Creating consistent content across multiple platforms requires repeated research and manual adaptation, making the publishing process time-consuming.
+
+**Workflow:** Topic research → AI content generation → platform-specific outputs → Notion draft
+
+[Explore the automation →](./social-media-content-factory)
+
+---
+
+### AI Job Intelligence Agent
+
+Aggregates jobs from multiple sources, filters and scores them against a candidate profile, removes duplicates, and delivers a curated opportunity summary.
+
+**Problem:** Job opportunities are scattered across platforms, requiring repeated searches and manual comparison to identify the most relevant openings.
+
+**Workflow:** Multi-source job search → normalization → deduplication → AI matching → Google Sheets → Telegram summary
+
+[Explore the automation →](./ai-job-intelligence-agent)
+
+---
+
+### Gatekeeper Agent
+
+Classifies incoming messages across multiple channels and decides whether to stop messaging, pause automation, escalate to support, or continue the workflow.
+
+**Problem:** Automated conversations need clear decision boundaries so sensitive interactions can be routed appropriately instead of following the same automated path.
+
+**Workflow:** Multi-channel input → intent analysis → decision routing → Airtable status update
+
+[Explore the automation →](./gatekeeper-agent)
+
+---
+
+### AI Intent Scoring
+
+Analyzes customer engagement signals to generate structured intent scores that can support downstream sales and marketing workflows.
+
+**Problem:** Behavioral signals are often scattered across customer interactions, making it difficult to consistently identify users with higher purchase intent.
+
+**Workflow:** Customer signals → AI scoring → structured intent profile → Airtable
+
+[Explore the automation →](./ai-intent-scoring)
+
+---
+
 More automations will be added as I build, test, and document them.
 
 ## How I Approach Automation
